@@ -10,6 +10,7 @@ void MCU_init(void); /* Device initialization function declaration */
 void main(void) {
 	MCU_init();
 	shell_init();
+	keyboard_init();
 	for (;;) {
 		shell_run();
 	}
