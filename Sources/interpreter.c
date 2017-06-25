@@ -1,4 +1,4 @@
-#include "shell.h"
+#include "interpreter.h"
 #include "keyevent.h"
 
 const char * key_association= {'*','#','1','2','3','4','7','5','8','6','9','A','B','C','D','0'};
@@ -29,11 +29,11 @@ char key;
 char key_aux;
 
 
-void shell_init(void){
+void interpreter_init(void){
     //TODO INIT
 }
 
-void shell_run(){
+void interpreter_run(){
     if(keyevent_is_empty())return;
     key=keyevent_pop;
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
