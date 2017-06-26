@@ -233,6 +233,9 @@ void fWHITE(void){
     red.duty_cycle=MAX_CYCLE;
     green.duty_cycle=MAX_CYCLE;
     blue.duty_cycle=MAX_CYCLE;
+    red.port_enable=LED_ON;
+    green.port_enable=LED_ON;
+    blue.port_enable=LED_ON;
 }
 
 void ledcontroller_pwm_handler(struct led aux){
