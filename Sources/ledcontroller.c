@@ -259,3 +259,14 @@ void ledcontroller_blink_handler(void){
     else fON();
     blink_state=(blink_state+1)%2;//toggle
 }
+
+void ledcontroller_intensity_up(){
+    fRED_UP();
+    fBLUE_UP();
+    fGREEN_UP();
+}
+void ledcontroller_intensity_down(){
+    fRED_DOWN();
+    fBLUE_DOWN();
+    fGREEN_DOWN();
+}
