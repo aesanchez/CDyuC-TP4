@@ -1,3 +1,4 @@
+#include <mc9s08sh8.h>
 #include "ledcontroller.h"
 #include "keyevent.h"
 

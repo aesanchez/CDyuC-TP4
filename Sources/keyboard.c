@@ -2,47 +2,48 @@
 #include "keyevent.h"
 #include "keyboard.h"
 
-const char NO_PRESIONADO = 42;
-const char TECLA_VACIA = '<';
-char teclaUlt = TECLA_VACIA;
+#define NOT_PRESSED 42 //meaning of life
+const char EMPTY_KEY = ' ';
+char last_pressed_key;
+char pressed_row;
+char pressed_column;
 
-const char map[4][4] = { { '1', '2', '3', 'A' },
+const char keymap[4][4] = { { '1', '2', '3', 'A' },
                          { '4', '5', '6', 'B' },
                          { '7',	'8', '9', 'C' },
                          { '*', '0', '#', 'D' } };
 
 
-void columna_presionada(char *);
-void fila_presionada(char *, char);
+void check_column();
+void check_row();
 
 void keyboard_init(void){
 	PTBDD = 0x0F;
-	PTBPE = 0xF0;	
+	PTBPE = 0xF0;
+	last_pressed_key=EMPTY_KEY;
 }
 
 void keyboard_check_key(void) {
-	char filaPresionada;
-	char columnaPresionada;
-	columna_presionada(&columnaPresionada);
-	if (columnaPresionada == NO_PRESIONADO) {
-		if (teclaUlt == TECLA_VACIA)
+	check_column();
+	if (pressed_column == NOT_PRESSED) {
+		if (last_pressed_key == EMPTY_KEY)
 			return;
-		keyevent_push(teclaUlt);
-		teclaUlt = TECLA_VACIA;
+		keyevent_push(last_pressed_key);
+		last_pressed_key = EMPTY_KEY;
 		return;
 	}
-	fila_presionada(&filaPresionada, columnaPresionada);
-	if (filaPresionada == NO_PRESIONADO) {
+	check_row();
+	if (pressed_row == NOT_PRESSED) {
 		return;
 	}
-	teclaUlt = map[filaPresionada][columnaPresionada];
+	last_pressed_key = keymap[pressed_row][pressed_column];
 }
 
-void fila_presionada(char * fp, char cp) {
-	char filaAct = 0;
-	while (filaAct < 4) {
+void check_row() {
+	char current_row = 0;
+	while (current_row < 4) {
 		PTBD=0x0F;
-		switch(filaAct) {
+		switch(current_row) {
 		case 0:
 			PTBD_PTBD0=0;
 			break;
@@ -56,33 +57,33 @@ void fila_presionada(char * fp, char cp) {
 			PTBD_PTBD3=0;
 			break;
 		}
-		columna_presionada(&cp);
-		if(cp!=NO_PRESIONADO) {
-			*fp=filaAct;
+		check_column();
+		if(pressed_column!=NOT_PRESSED) {
+			pressed_row=current_row;
 			PTBD=0x00;
 			return;
 		}
-		filaAct++;
+		current_row++;
 	}
-	*fp = NO_PRESIONADO;
+	pressed_row = NOT_PRESSED;
 }
 
-void columna_presionada(char * cp) {
+void check_column() {
 	if (PTBD_PTBD7 == 0) {
-		*cp = 3;
+		pressed_column = 3;
 		return;
 	}
 	if (PTBD_PTBD6 == 0) {
-		*cp = 2;
+		pressed_column = 2;
 		return;
 	}
 	if (PTBD_PTBD5 == 0) {
-		*cp = 1;
+		pressed_column = 1;
 		return;
 	}
 	if (PTBD_PTBD4 == 0) {
-		*cp = 0;
+		pressed_column = 0;
 		return;
 	}
-	*cp = NO_PRESIONADO;
+	pressed_column = NOT_PRESSED;
 }
