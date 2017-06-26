@@ -32,7 +32,7 @@ char key_aux;
 
 void ledcontroller_run(){
     if(keyevent_is_empty())return;
-    key=keyevent_pop;
+    key=keyevent_pop();
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
         if(key==key_association[key_aux]) break;
     }
@@ -52,8 +52,8 @@ void ledcontroller_run(){
 
 
 struct led {
-   char     duty_cycle;
-   char     state;
+   char     duty_cycle; //leer state
+   char     state; // sirve para saber si el led estaba anteriormente prendido cuando se ejecuta el fON(), cosa de mantener el color que estaba.
    char*    port; //TODO: no se si es de tipo char
    char*    port_enable; //TODO
    char     cycle_iteration;  
@@ -68,8 +68,8 @@ char unsigned blink_state;//1->ON
 char sweep_on; unsigned char sweep_counter;
 
 
-//from 0(OFF) to 5(Completely on)
-#define MAX_CYCLE 5
+//from 0(OFF) to 10(Completely on)
+#define MAX_CYCLE 10
 #define MIN_CYCLE 0
 
 void ledcontroller_pwm_handler(struct led);
@@ -112,14 +112,14 @@ void ledcontroller_init(){
 }
 
 // led frequency should by around 100 Hz --> period of 10 ms
-// if we want 6(0(OFF),1,2,3,4,5(FULL)) levels of intensity --> interrupt every 2ms
-//si asumimos que se llama cada 2 ms
+// if we want 0(OFF)-10(FULLY ON) levels of intensity --> interrupt every 1ms
+//si asumimos que se llama cada 1 ms
 #define PWM_PERIOD 10
 #define SWEEP_PERIOD 500
 #define BLINK_PERIOD 250
-#define INTERRUPT_PERIOD 2
+#define INTERRUPT_PERIOD 1
 
-void ledcontroller_interrupt_handler(void){//llamada cada 2 ms
+void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
     if(red.state)ledcontroller_pwm_handler(red);
     if(green.state)ledcontroller_pwm_handler(green);
     if(blue.state)ledcontroller_pwm_handler(blue);
