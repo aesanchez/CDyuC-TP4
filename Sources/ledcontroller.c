@@ -235,13 +235,13 @@ void fWHITE(void){
     blue.duty_cycle=MAX_CYCLE;
 }
 
-void ledcontroller_pwm_handler(struct led l){
-    if(l.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-l.duty_cycle))
-        *l.port=LED_OFF;
+void ledcontroller_pwm_handler(struct led aux){
+    if(aux.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-aux.duty_cycle))
+        *aux.port=LED_OFF;
     else 
-        *l.port=LED_ON;
-    l.cycle_iteration++;
-    if(l.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) l.cycle_iteration=0;          
+        *aux.port=LED_ON;
+    aux.cycle_iteration++;
+    if(aux.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) aux.cycle_iteration=0;          
 }
 void ledcontroller_sweep_handler(void){
     if(sweep_counter++<(SWEEP_PERIOD/INTERRUPT_PERIOD))return;
