@@ -14,8 +14,8 @@ const char keymap[4][4] = { { '1', '2', '3', 'A' },
                          { '*', '0', '#', 'D' } };
 
 
-void check_column();
-void check_row();
+void check_column(void);
+void check_row(void);
 
 void keyboard_init(void){
 	PTBDD = 0x0F;
@@ -39,7 +39,7 @@ void keyboard_check_key(void) {
 	last_pressed_key = keymap[pressed_row][pressed_column];
 }
 
-void check_row() {
+void check_row(void) {
 	char current_row = 0;
 	while (current_row < 4) {
 		PTBD=0x0F;
@@ -68,7 +68,7 @@ void check_row() {
 	pressed_row = NOT_PRESSED;
 }
 
-void check_column() {
+void check_column(void) {
 	if (PTBD_PTBD7 == 0) {
 		pressed_column = 3;
 		return;

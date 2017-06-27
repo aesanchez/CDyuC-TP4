@@ -3,8 +3,8 @@
 #include "keyevent.h"
 
 //START: de lo relacionado a la toma de decisiones
-const char * key_association= {'*','#','1','2','3','4','7','5','8','6','9','A','B','C','D','0'};
-const char NUMBER_OF_COMMANDS= 16;
+#define NUMBER_OF_COMMANDS 16
+const char key_association[NUMBER_OF_COMMANDS]= {'*','#','1','2','3','4','7','5','8','6','9','A','B','C','D','0'};
 
 void fON(void);
 void fOFF(void);
@@ -41,8 +41,6 @@ void ledcontroller_run(){
 }
 //END: de lo relacionado a la toma de decisiones
 
-
-
 //LEDs turn on with LOW
 #define LED_ON 0
 #define LED_OFF 1
@@ -51,13 +49,23 @@ void ledcontroller_run(){
 #define LED_DISABLE 0
 
 
+
 struct led {
    char     duty_cycle; //leer state
    char     state; // sirve para saber si el led estaba anteriormente prendido cuando se ejecuta el fON(), cosa de mantener el color que estaba.
-   char*    port; //TODO: no se si es de tipo char
-   char*    port_enable; //TODO
+   //char*    port; //TODO: no se si es de tipo char
+   //char*    port_enable; //TODO
    char     cycle_iteration;  
 };
+#define RED_PORT PTCD_PTCD1
+#define RED_ENABLE PTCDD_PTCDD1
+#define GREEN_PORT PTCD_PTCD2
+#define GREEN_ENABLE PTCDD_PTCDD2
+#define BLUE_PORT PTCD_PTCD3
+#define BLUE_ENABLE PTCDD_PTCDD3
+
+
+
 struct led red;
 struct led green;
 struct led blue;
@@ -78,12 +86,9 @@ void ledcontroller_blink_handler(void);
 
 void ledcontroller_init(){
     //puertos como salida
-    red.port_enable=&PTCDD_PTCDD1;
-    *red.port_enable=LED_ENABLE;
-    green.port_enable=&PTCDD_PTCDD2;
-    *green.port_enable=LED_ENABLE;
-    blue.port_enable=&PTCDD_PTCDD3;
-    *blue.port_enable=LED_ENABLE;
+    RED_ENABLE=LED_ENABLE;
+    GREEN_ENABLE=LED_ENABLE;
+    BLUE_ENABLE=LED_ENABLE;
 
     red.duty_cycle=MIN_CYCLE;
     green.duty_cycle=MIN_CYCLE;
@@ -93,13 +98,9 @@ void ledcontroller_init(){
     green.state=1;
     red.state=1;
 
-    red.port=&PTCD_PTCD1;
-    green.port=&PTCD_PTCD2;
-    blue.port=&PTCD_PTCD3;
-
-    *red.port=LED_OFF;
-    *green.port=LED_OFF;
-    *blue.port=LED_OFF;
+    RED_PORT=LED_OFF;
+    GREEN_PORT=LED_OFF;
+    BLUE_PORT=LED_OFF;
 
     red.cycle_iteration=0;
     green.cycle_iteration=0;
@@ -131,16 +132,16 @@ void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
 // cosa de no alterar todos los estados que tenian
 // creeria que funciona
 void fON(void){
-    if(red.state) *red.port_enable=LED_ENABLE;
-    if(green.state) *green.port_enable=LED_ENABLE;
-    if(blue.state) *blue.port_enable=LED_ENABLE;
+    if(red.state) RED_ENABLE=LED_ENABLE;
+    if(green.state) GREEN_ENABLE=LED_ENABLE;
+    if(blue.state) BLUE_ENABLE=LED_ENABLE;
     //TODO: prender RTC?
 }
 
 void fOFF(void){
-    *red.port_enable=LED_DISABLE;
-    *green.port_enable=LED_DISABLE;
-    *blue.port_enable=LED_DISABLE;
+    RED_ENABLE=LED_DISABLE;
+    GREEN_ENABLE=LED_DISABLE;
+    BLUE_ENABLE=LED_DISABLE;
     //TODO: Apagar RTC? para que los interrupts no sigan??
     //solo apagaria el led, toda la logica de background sigue funcionando
 }
@@ -148,28 +149,28 @@ void fOFF(void){
 void fRED_TOGGLE(void){    
     if(red.state){//estaba prendido
         red.state=0;
-        *red.port_enable==LED_DISABLE;
+        RED_ENABLE=LED_DISABLE;
     }else{//estaba apagado
         red.state=1;
-        *red.port_enable==LED_ENABLE;
+        RED_ENABLE=LED_ENABLE;
     }
 }
 void fGREEN_TOGGLE(void){
     if(green.state){//estaba prendido
         green.state=0;
-        *green.port_enable==LED_DISABLE;
+        GREEN_ENABLE=LED_DISABLE;
     }else{//estaba apagado
         green.state=1;
-        *green.port_enable==LED_ENABLE;
+        GREEN_ENABLE=LED_ENABLE;
     }    
 }
 void fBLUE_TOGGLE(void){
     if(blue.state){//estaba prendido
         blue.state=0;
-        *blue.port_enable==LED_DISABLE;
+        BLUE_ENABLE=LED_DISABLE;
     }else{//estaba apagado
         blue.state=1;
-        *blue.port_enable==LED_ENABLE;
+        BLUE_ENABLE=LED_ENABLE;
     }
 }
 
@@ -234,18 +235,34 @@ void fWHITE(void){
     red.duty_cycle=MAX_CYCLE;
     green.duty_cycle=MAX_CYCLE;
     blue.duty_cycle=MAX_CYCLE;
-    red.port_enable=LED_ON;
-    green.port_enable=LED_ON;
-    blue.port_enable=LED_ON;
+    RED_ENABLE=LED_ON;
+    GREEN_ENABLE=LED_ON;
+    BLUE_ENABLE=LED_ON;
 }
 
-void ledcontroller_pwm_handler(struct led aux){
-    if(aux.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-aux.duty_cycle))
-        *aux.port=LED_OFF;
+void ledcontroller_pwm_handler_red(void){
+    if(red.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-red.duty_cycle))
+        RED_PORT=LED_OFF;
     else 
-        *aux.port=LED_ON;
-    aux.cycle_iteration++;
-    if(aux.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) aux.cycle_iteration=0;          
+        RED_PORT=LED_ON;
+    red.cycle_iteration++;
+    if(red.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) red.cycle_iteration=0;          
+}
+void ledcontroller_pwm_handler_green(void){
+    if(green.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-green.duty_cycle))
+        GREEN_PORT=LED_OFF;
+    else 
+        GREEN_PORT=LED_ON;
+    green.cycle_iteration++;
+    if(green.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) green.cycle_iteration=0;          
+}
+void ledcontroller_pwm_handler_blue(void){
+    if(blue.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-blue.duty_cycle))
+        BLUE_PORT=LED_OFF;
+    else 
+        BLUE_PORT=LED_ON;
+    blue.cycle_iteration++;
+    if(blue.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) blue.cycle_iteration=0;          
 }
 void ledcontroller_sweep_handler(void){
     if(sweep_counter++<(SWEEP_PERIOD/INTERRUPT_PERIOD))return;
