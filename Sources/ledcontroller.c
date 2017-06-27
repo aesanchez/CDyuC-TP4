@@ -2,9 +2,14 @@
 #include "ledcontroller.h"
 #include "keyevent.h"
 
+char system_state;
+#define SYSTEM_ON 1
+#define SYSTEM_OFF 0
+
 //START: de lo relacionado a la toma de decisiones
 #define NUMBER_OF_COMMANDS 16
 const char key_association[NUMBER_OF_COMMANDS]= {'*','#','1','2','3','4','7','5','8','6','9','A','B','C','D','0'};
+const char on_command='*';
 
 void fON(void);
 void fOFF(void);
@@ -33,10 +38,10 @@ char key_aux;
 void ledcontroller_run(){
     if(keyevent_is_empty())return;
     key=keyevent_pop();
+    if(SYSTEM_OFF==system_state && key!=on_command) return;//solo se puede despertar del estado off con el commando de prender
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
         if(key==key_association[key_aux]) break;
-    }
-    
+    }    
     if(key_aux==NUMBER_OF_COMMANDS)return;//ERROR
     (*COMMANDS_FUNC[key_aux])();
 }
@@ -99,7 +104,7 @@ void ledcontroller_init(){
 
     red.state=1;
     green.state=1;
-    red.state=1;
+    blue.state=1;
 
     RED_PORT=LED_OFF;
     GREEN_PORT=LED_OFF;
@@ -111,7 +116,7 @@ void ledcontroller_init(){
 
     blink_on=0;
     sweep_on=0;
-
+    system_state=SYSTEM_OFF;
     //TODO: configurar el RTC?
     RTCSC_RTIE=1;    
 }
@@ -121,7 +126,10 @@ void ledcontroller_init(){
 //si asumimos que se llama cada 1 ms
 #define PWM_PERIOD 10
 #define SWEEP_PERIOD 500
-#define BLINK_PERIOD 250
+#define BLINK_MAX 1000
+#define BLINK_MIN 250
+#define BLINK_STEP 250
+int blink_period = 500;
 #define INTERRUPT_PERIOD 1
 
 void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
@@ -139,6 +147,7 @@ void fON(void){
     if(red.state) RED_ENABLE=LED_ENABLE;
     if(green.state) GREEN_ENABLE=LED_ENABLE;
     if(blue.state) BLUE_ENABLE=LED_ENABLE;
+    system_state=SYSTEM_ON;
     //TODO: prender RTC?
 }
 
@@ -146,6 +155,9 @@ void fOFF(void){
     RED_ENABLE=LED_DISABLE;
     GREEN_ENABLE=LED_DISABLE;
     BLUE_ENABLE=LED_DISABLE;
+    system_state=SYSTEM_OFF;
+    blink_on=0;
+    sweep_on=0;
     //TODO: Apagar RTC? para que los interrupts no sigan??
     //solo apagaria el led, toda la logica de background sigue funcionando
 }
@@ -210,10 +222,12 @@ void fBLUE_DOWN(void){
 }
 
 void fVEL_UP(void){
-    //TODO
+    if(blink_period==BLINK_MAX)return;
+    blink_period+=BLINK_STEP;
 }
 void fVEL_DOWN(void){
-    //TODO
+    if(blink_state==BLINK_MIN)return;
+    blink_period-=BLINK_STEP;
 }
 
 void fBLINK_TOGGLE(void){  
@@ -239,9 +253,12 @@ void fWHITE(void){
     red.duty_cycle=MAX_CYCLE;
     green.duty_cycle=MAX_CYCLE;
     blue.duty_cycle=MAX_CYCLE;
-    RED_ENABLE=LED_ON;
-    GREEN_ENABLE=LED_ON;
-    BLUE_ENABLE=LED_ON;
+    red.state=1;
+    green.state=1;
+    blue.state=1;
+    RED_ENABLE=LED_ENABLE;
+    GREEN_ENABLE=LED_ENABLE;
+    BLUE_ENABLE=LED_ENABLE;
 }
 
 void ledcontroller_pwm_handler_red(void){
@@ -274,20 +291,22 @@ void ledcontroller_sweep_handler(void){
 }
 
 void ledcontroller_blink_handler(void){
-    if(blink_counter++<(BLINK_PERIOD/INTERRUPT_PERIOD))return;
+    if(blink_counter++<(blink_period/INTERRUPT_PERIOD))return;
     blink_counter=0;
-    if(blink_state) fOFF();
-    else fON();
-    blink_state=(blink_state+1)%2;//toggle
+    if(blink_state){
+        blink_state=0;
+        RED_ENABLE=LED_DISABLE;
+        GREEN_ENABLE=LED_DISABLE;
+        BLUE_ENABLE=LED_DISABLE; 
+    }else{
+        blink_state=1;
+        fON();
+    } 
 }
 
 void ledcontroller_intensity_up(){
-    fRED_UP();
-    fBLUE_UP();
-    fGREEN_UP();
+    //segun el profesor esto setea la intensidad maxima
 }
 void ledcontroller_intensity_down(){
-    fRED_DOWN();
-    fBLUE_DOWN();
-    fGREEN_DOWN();
+    
 }

@@ -9,7 +9,7 @@
 **     Processor : MC9S08SH8CPJ
 **     Version   : Component 01.008, Driver 01.08, CPU db: 3.00.066
 **     Datasheet : MC9S08SH8 Rev. 3 6/2008
-**     Date/Time : 2017-06-27, 13:20, # CodeGen: 3
+**     Date/Time : 2017-06-27, 14:27, # CodeGen: 5
 **     Abstract  :
 **         This module contains device initialization code 
 **         for selected on-chip peripherals.
@@ -52,6 +52,7 @@ typedef unsigned long int uint32_t;
 /* User declarations and definitions */
 #include "ledcontroller.h"
 #include "keyboard.h"
+char iteracion_teclado=0;
 /*   Code, declarations and definitions here will be preserved during code generation */
 /* End of user declarations and definitions */
 
@@ -106,8 +107,8 @@ void MCU_init(void)
   /* ### Init_RTC init code */
   /* RTCMOD: RTCMOD=0 */
   RTCMOD = 0x00U;                      /* Set modulo register */
-  /* RTCSC: RTIF=1,RTCLKS=0,RTIE=0,RTCPS=8 */
-  RTCSC = 0x88U;                       /* Configure RTC */
+  /* RTCSC: RTIF=1,RTCLKS=0,RTIE=0,RTCPS=0x0D */
+  RTCSC = 0x8DU;                       /* Configure RTC */
   /* ### */
   /*lint -save  -e950 Disable MISRA rule (1.1) checking. */
   asm CLI;                             /* Enable interrupts */
@@ -129,8 +130,12 @@ void MCU_init(void)
 */
 __interrupt void isrVrtc(void)
 {
-  keyboard_check_key();
-  //ledcontroller_interrupt_handler();
+  iteracion_teclado++;
+  if(iteracion_teclado==25){
+    keyboard_check_key();
+    iteracion_teclado=0;
+  }  
+  ledcontroller_interrupt_handler();
   RTCSC_RTIF=1;
 
 }
