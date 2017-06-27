@@ -77,7 +77,7 @@ struct led green;
 struct led blue;
 
 //states
-char blink_on; unsigned char blink_counter;
+char blink_on; unsigned int blink_counter;
 char unsigned blink_state;//1->ON
 char sweep_on; unsigned char sweep_counter;
 
@@ -127,9 +127,9 @@ void ledcontroller_init(){
 #define PWM_PERIOD 10
 #define SWEEP_PERIOD 500
 #define BLINK_MAX 1000
-#define BLINK_MIN 250
-#define BLINK_STEP 250
-int blink_period = 500;
+#define BLINK_MIN 100
+#define BLINK_STEP 300
+int blink_period = 700;
 #define INTERRUPT_PERIOD 1
 
 void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
@@ -221,12 +221,12 @@ void fBLUE_DOWN(void){
     blue.duty_cycle--;
 }
 
-void fVEL_UP(void){
+void fVEL_DOWN(void){
     if(blink_period==BLINK_MAX)return;
     blink_period+=BLINK_STEP;
 }
-void fVEL_DOWN(void){
-    if(blink_state==BLINK_MIN)return;
+void fVEL_UP(void){
+    if(blink_period==BLINK_MIN)return;
     blink_period-=BLINK_STEP;
 }
 
