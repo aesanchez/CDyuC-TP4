@@ -9,7 +9,7 @@
 **     Processor : MC9S08SH8CPJ
 **     Version   : Component 01.008, Driver 01.08, CPU db: 3.00.066
 **     Datasheet : MC9S08SH8 Rev. 3 6/2008
-**     Date/Time : 2017-06-27, 14:27, # CodeGen: 5
+**     Date/Time : 2017-06-27, 15:56, # CodeGen: 8
 **     Abstract  :
 **         This module contains device initialization code 
 **         for selected on-chip peripherals.
@@ -107,8 +107,19 @@ void MCU_init(void)
   /* ### Init_RTC init code */
   /* RTCMOD: RTCMOD=0 */
   RTCMOD = 0x00U;                      /* Set modulo register */
-  /* RTCSC: RTIF=1,RTCLKS=0,RTIE=0,RTCPS=0x0D */
-  RTCSC = 0x8DU;                       /* Configure RTC */
+  /* RTCSC: RTIF=1,RTCLKS=0,RTIE=0,RTCPS=0 */
+  RTCSC = 0x80U;                       /* Configure RTC */
+  /* ### Init_ADC init code */
+  /* APCTL1: ADPC7=0,ADPC6=0,ADPC5=0,ADPC4=0,ADPC3=0,ADPC2=0,ADPC1=0,ADPC0=0 */
+  APCTL1 = 0x00U;                                      
+  /* ADCCFG: ADLPC=0,ADIV1=0,ADIV0=0,ADLSMP=0,MODE1=1,MODE0=0,ADICLK1=0,ADICLK0=0 */
+  ADCCFG = 0x08U;                                      
+  /* ADCCV: ADCV9=0,ADCV8=0,ADCV7=0,ADCV6=0,ADCV5=0,ADCV4=0,ADCV3=0,ADCV2=0,ADCV1=0,ADCV0=0 */
+  ADCCV = 0x00U;                            
+  /* ADCSC2: ADACT=0,ADTRG=0,ACFE=0,ACFGT=0 */
+  ADCSC2 = 0x00U;                                      
+  /* ADCSC1: COCO=0,AIEN=0,ADCO=1,ADCH4=0,ADCH3=0,ADCH2=0,ADCH1=1,ADCH0=0 */
+  ADCSC1 = 0x22U;                                      
   /* ### */
   /*lint -save  -e950 Disable MISRA rule (1.1) checking. */
   asm CLI;                             /* Enable interrupts */
@@ -142,6 +153,24 @@ __interrupt void isrVrtc(void)
 /* end of isrVrtc */
 
 
+/*
+** ===================================================================
+**     Interrupt handler : isrVadc
+**
+**     Description :
+**         User interrupt service routine. 
+**     Parameters  : None
+**     Returns     : Nothing
+** ===================================================================
+*/
+__interrupt void isrVadc(void)
+{
+  /* Write your interrupt code here ... */
+
+}
+/* end of isrVadc */
+
+
 /*lint -restore Enable MISRA rule (8.10) checking. */
 
 /*lint -save  -e950 Disable MISRA rule (1.1) checking. */
@@ -173,7 +202,7 @@ static void (* near const _vect[])(void) @0xFFC0 = { /* Interrupt vector table *
          UNASSIGNED_ISR,               /* Int.no. 26 Vmtim (at FFCA)                 Unassigned */
          isrVrtc,                      /* Int.no. 25 Vrtc (at FFCC)                  Used */
          UNASSIGNED_ISR,               /* Int.no. 24 Viic (at FFCE)                  Unassigned */
-         UNASSIGNED_ISR,               /* Int.no. 23 Vadc (at FFD0)                  Unassigned */
+         isrVadc,                      /* Int.no. 23 Vadc (at FFD0)                  Used */
          UNASSIGNED_ISR,               /* Int.no. 22 VReserved22 (at FFD2)           Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 21 Vportb (at FFD4)                Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 20 Vporta (at FFD6)                Unassigned */
