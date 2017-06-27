@@ -10,6 +10,6 @@ void potentiometer_init(){
 void potentiometer_interrupt_handler(){
     //calcular intensidad
     //  0<  valor_sensor<1023
-    //  0<  intensidad  <1.0
-    ledcontroller_set_intensity((ADCR*1.0)/1023);
+    //  0<  intensidad  <10
+    ledcontroller_set_intensity((ADCR*10)/1023);
 }

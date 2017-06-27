@@ -52,6 +52,7 @@ typedef unsigned long int uint32_t;
 /* User declarations and definitions */
 #include "ledcontroller.h"
 #include "keyboard.h"
+#include "potentiometer.h"
 char iteracion_teclado=0;
 /*   Code, declarations and definitions here will be preserved during code generation */
 /* End of user declarations and definitions */
@@ -145,7 +146,8 @@ __interrupt void isrVrtc(void)
   if(iteracion_teclado==25){
     keyboard_check_key();
     iteracion_teclado=0;
-  }  
+  }
+  potentiometer_interrupt_handler();
   ledcontroller_interrupt_handler();
   RTCSC_RTIF=1;
 
