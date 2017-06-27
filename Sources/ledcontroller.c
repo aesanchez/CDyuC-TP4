@@ -6,7 +6,10 @@ char led_intensity;//entre 0 y 10
 char system_state;
 #define SYSTEM_ON 1
 #define SYSTEM_OFF 0
-
+//TODO probablemente estaria bueno hacer estados tipo: on, off, sweep y blink para que las cosas sean mas faciles
+//una cosa piola tambien seria en vez de cambiar la direccion de los pines cada vez que lo queremos pagar,
+//apagarlos poniendo el duty cycle en 0/ o tambien apagar su respectivo pwm y forzar la salida a LED_ON
+//de esa menera la inicializacion con los puertos PTCDD que indican la direccion solo se tocan en el init
 //START: de lo relacionado a la toma de decisiones
 #define NUMBER_OF_COMMANDS 16
 const char key_association[NUMBER_OF_COMMANDS]= {'*','#','1','2','3','4','7','5','8','6','9','A','B','C','D','0'};
@@ -40,6 +43,9 @@ void ledcontroller_run(){
     if(keyevent_is_empty())return;
     key=keyevent_pop();    
     //TODO modificar esto que es muy overkill, lo de chequear si esta apagado o no
+    //con estados proablemente se solucionaria
+    // y ademas nos reduce las funciones porque podria tener un solo UP/DOWN cycle  para todos los leds
+    // idem el resto de las funciones
     if(SYSTEM_OFF==system_state && key!=on_command) return;//solo se puede despertar del estado off con el commando de prender
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
         if(key==key_association[key_aux]) break;
@@ -63,7 +69,9 @@ struct led {
    char     state; // sirve para saber si el led estaba anteriormente prendido cuando se ejecuta el fON(), cosa de mantener el color que estaba.
    //char*    port; //TODO: no se si es de tipo char
    //char*    port_enable; //TODO
-   char     cycle_iteration;  
+   char     cycle_iteration;
+   //Byte*    port;//TESTEAR ESTO QUE PROBABLEMENTE ANDE
+   //Bits.byte* esto tambien supongo
 };
 #define RED_PORT PTCD_PTCD1
 #define RED_ENABLE PTCDD_PTCDD1
