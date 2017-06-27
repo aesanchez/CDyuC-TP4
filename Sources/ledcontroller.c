@@ -1,7 +1,7 @@
 #include <mc9s08sh8.h>
 #include "ledcontroller.h"
 #include "keyevent.h"
-
+float led_intensity;
 char system_state;
 #define SYSTEM_ON 1
 #define SYSTEM_OFF 0
@@ -117,6 +117,7 @@ void ledcontroller_init(){
     blink_on=0;
     sweep_on=0;
     system_state=SYSTEM_OFF;
+    led_intensity=1.0;
     //TODO: configurar el RTC?
     RTCSC_RTIE=1;    
 }
@@ -304,9 +305,10 @@ void ledcontroller_blink_handler(void){
     } 
 }
 
-void ledcontroller_intensity_up(){
-    //segun el profesor esto setea la intensidad maxima
+void ledcontroller_set_intensity(float intensity){
+    led_intensity=intensity;
+    red.duty_cycle=(char)(red.duty_cycle*led_intensity);
+    green.duty_cycle=(char)(green.duty_cycle*led_intensity);
+    blue.duty_cycle=(char)(blue.duty_cycle*led_intensity);
 }
-void ledcontroller_intensity_down(){
-    
-}
+

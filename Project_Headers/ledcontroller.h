@@ -4,7 +4,6 @@
 void ledcontroller_init(void);
 void ledcontroller_run(void);
 void ledcontroller_interrupt_handler(void);
-void ledcontroller_intensity_up();
-void ledcontroller_intensity_down();
+void ledcontroller_set_intensity(float);
 
 #endif

@@ -10,7 +10,7 @@ void MCU_init(void); /* Device initialization function declaration */
 
 void main(void) {
 	MCU_init();
-	RTCSC=0x88;
+	RTCSC=0x88;//RTC cada 1 ms con las interrupciones apagadas
 	keyboard_init();
 	ledcontroller_init();
 	for (;;) {
