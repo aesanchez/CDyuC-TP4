@@ -145,9 +145,9 @@ __interrupt void isrVrtc(void)
   iteracion_teclado++;
   if(iteracion_teclado==25){
     keyboard_check_key();
+    potentiometer_interrupt_handler();
     iteracion_teclado=0;
-  }
-  potentiometer_interrupt_handler();
+  }  
   ledcontroller_interrupt_handler();
   RTCSC_RTIF=1;
 

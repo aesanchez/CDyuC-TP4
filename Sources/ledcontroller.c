@@ -38,7 +38,8 @@ char key_aux;
 
 void ledcontroller_run(){
     if(keyevent_is_empty())return;
-    key=keyevent_pop();
+    key=keyevent_pop();    
+    //TODO modificar esto que es muy overkill, lo de chequear si esta apagado o no
     if(SYSTEM_OFF==system_state && key!=on_command) return;//solo se puede despertar del estado off con el commando de prender
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
         if(key==key_association[key_aux]) break;
@@ -99,9 +100,9 @@ void ledcontroller_init(){
     GREEN_ENABLE=LED_ENABLE;
     BLUE_ENABLE=LED_ENABLE;
 
-    red.duty_cycle=MIN_CYCLE;
-    green.duty_cycle=MIN_CYCLE;
-    blue.duty_cycle=MIN_CYCLE;
+    red.duty_cycle=(MAX_CYCLE-MIN_CYCLE)/2;
+    green.duty_cycle=(MAX_CYCLE-MIN_CYCLE)/2;
+    blue.duty_cycle=(MAX_CYCLE-MIN_CYCLE)/2;
 
     red.state=1;
     green.state=1;
@@ -117,7 +118,7 @@ void ledcontroller_init(){
 
     blink_on=0;
     sweep_on=0;
-    system_state=SYSTEM_OFF;
+    system_state=SYSTEM_ON;
     led_intensity=1.0;
     //TODO: configurar el RTC?
     RTCSC_RTIE=1;    
@@ -127,7 +128,7 @@ void ledcontroller_init(){
 // if we want 0(OFF)-10(FULLY ON) levels of intensity --> interrupt every 1ms
 //si asumimos que se llama cada 1 ms
 #define PWM_PERIOD 10
-#define SWEEP_PERIOD 500
+#define SWEEP_PERIOD 200
 #define BLINK_MAX 1000
 #define BLINK_MIN 100
 #define BLINK_STEP 300
@@ -232,19 +233,24 @@ void fVEL_UP(void){
     blink_period-=BLINK_STEP;
 }
 
-void fBLINK_TOGGLE(void){  
+void fBLINK_TOGGLE(void){
+    sweep_on=0;
     if (blink_on) blink_on=0;
     else{
         blink_on=1;
         blink_counter=0;
-        blink_state=1;      
+        blink_state=1;
+
     }  
 }
-void fSWEEP_TOGGLE(void){   
+char sweep_next_state;
+void fSWEEP_TOGGLE(void){
+    blink_on=0; 
     if (sweep_on) sweep_on=0;
     else{
         sweep_on=1;
         sweep_counter=0;
+        sweep_next_state='R';
         //TODO
     } 
 }
@@ -290,9 +296,38 @@ void ledcontroller_pwm_handler_blue(void){
     blue.cycle_iteration++;
     if(blue.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) blue.cycle_iteration=0;          
 }
+
 void ledcontroller_sweep_handler(void){
     if(sweep_counter++<(SWEEP_PERIOD/INTERRUPT_PERIOD))return;
-    //TODO barrido
+    switch (sweep_next_state){
+        case 'R':
+        red.state=1;
+        green.state=0;
+        blue.state=0;
+        RED_ENABLE=LED_ENABLE;
+        GREEN_ENABLE=LED_DISABLE;
+        BLUE_ENABLE=LED_DISABLE;
+        sweep_next_state='G';
+        break;
+        case 'G':
+        red.state=0;
+        green.state=1;
+        blue.state=0;
+        RED_ENABLE=LED_DISABLE;
+        GREEN_ENABLE=LED_ENABLE;
+        BLUE_ENABLE=LED_DISABLE;
+        sweep_next_state='B';
+        break;
+        case 'B':
+        red.state=0;
+        green.state=0;
+        blue.state=1;
+        RED_ENABLE=LED_DISABLE;
+        GREEN_ENABLE=LED_DISABLE;
+        BLUE_ENABLE=LED_ENABLE;
+        sweep_next_state='R';
+        break;
+    }
 }
 
 void ledcontroller_blink_handler(void){
@@ -312,4 +347,3 @@ void ledcontroller_blink_handler(void){
 void ledcontroller_set_intensity(char intensity){
     led_intensity=intensity;
 }
-
