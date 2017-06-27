@@ -10,6 +10,7 @@ void MCU_init(void); /* Device initialization function declaration */
 
 void main(void) {
 	MCU_init();
+	RTCSC=0x88;
 	keyboard_init();
 	ledcontroller_init();
 	for (;;) {

@@ -27,7 +27,7 @@ void (*COMMANDS_FUNC[])(void) = {fON,fOFF,fRED_TOGGLE,fGREEN_TOGGLE,fBLUE_TOGGLE
                     fRED_DOWN,fGREEN_UP,fGREEN_DOWN,fBLUE_UP,fBLUE_DOWN,fVEL_UP,fVEL_DOWN,
                     fBLINK_TOGGLE,fSWEEP_TOGGLE,fWHITE};
 
-char key;
+static char key;
 char key_aux;
 
 void ledcontroller_run(){
@@ -36,6 +36,7 @@ void ledcontroller_run(){
     for(key_aux=0;key_aux<NUMBER_OF_COMMANDS;key_aux++){
         if(key==key_association[key_aux]) break;
     }
+    
     if(key_aux==NUMBER_OF_COMMANDS)return;//ERROR
     (*COMMANDS_FUNC[key_aux])();
 }
@@ -80,7 +81,9 @@ char sweep_on; unsigned char sweep_counter;
 #define MAX_CYCLE 10
 #define MIN_CYCLE 0
 
-void ledcontroller_pwm_handler(struct led);
+void ledcontroller_pwm_handler_red(void);
+void ledcontroller_pwm_handler_green(void);
+void ledcontroller_pwm_handler_blue(void);
 void ledcontroller_sweep_handler(void);
 void ledcontroller_blink_handler(void);
 
@@ -109,7 +112,8 @@ void ledcontroller_init(){
     blink_on=0;
     sweep_on=0;
 
-    //TODO: configurar el RTC?    
+    //TODO: configurar el RTC?
+    RTCSC_RTIE=1;    
 }
 
 // led frequency should by around 100 Hz --> period of 10 ms
@@ -121,9 +125,9 @@ void ledcontroller_init(){
 #define INTERRUPT_PERIOD 1
 
 void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
-    if(red.state)ledcontroller_pwm_handler(red);
-    if(green.state)ledcontroller_pwm_handler(green);
-    if(blue.state)ledcontroller_pwm_handler(blue);
+    if(red.state)ledcontroller_pwm_handler_red();
+    if(green.state)ledcontroller_pwm_handler_green();
+    if(blue.state)ledcontroller_pwm_handler_blue();
     if(sweep_on)ledcontroller_sweep_handler();
     if(blink_on)ledcontroller_blink_handler();
 }

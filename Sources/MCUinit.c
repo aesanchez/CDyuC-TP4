@@ -9,7 +9,7 @@
 **     Processor : MC9S08SH8CPJ
 **     Version   : Component 01.008, Driver 01.08, CPU db: 3.00.066
 **     Datasheet : MC9S08SH8 Rev. 3 6/2008
-**     Date/Time : 2017-06-27, 12:46, # CodeGen: 1
+**     Date/Time : 2017-06-27, 13:20, # CodeGen: 3
 **     Abstract  :
 **         This module contains device initialization code 
 **         for selected on-chip peripherals.
@@ -50,6 +50,8 @@ typedef unsigned long int uint32_t;
 #endif
 
 /* User declarations and definitions */
+#include "ledcontroller.h"
+#include "keyboard.h"
 /*   Code, declarations and definitions here will be preserved during code generation */
 /* End of user declarations and definitions */
 
@@ -80,8 +82,8 @@ void MCU_init(void)
     ICSSC = *(unsigned char*far)0xFFAEU; /* Initialize ICSSC register from a non volatile memory */
   }
   /*lint -restore Enable MISRA rule (11.3) checking. */
-  /* ICSC1: CLKS=0,RDIV=0,IREFS=1,IRCLKEN=0,IREFSTEN=0 */
-  ICSC1 = 0x04U;                       /* Initialization of the ICS control register 1 */
+  /* ICSC1: CLKS=0,RDIV=0,IREFS=1,IRCLKEN=1,IREFSTEN=0 */
+  ICSC1 = 0x06U;                       /* Initialization of the ICS control register 1 */
   /* ICSC2: BDIV=1,RANGE=0,HGO=0,LP=0,EREFS=0,ERCLKEN=0,EREFSTEN=0 */
   ICSC2 = 0x40U;                       /* Initialization of the ICS control register 2 */
   while(ICSSC_IREFST == 0U) {          /* Wait until the source of reference clock is internal clock */
@@ -101,6 +103,11 @@ void MCU_init(void)
   PTBDS = 0x00U;                                      
   /* PTCDS: PTCDS3=0,PTCDS2=0,PTCDS1=0,PTCDS0=0 */
   PTCDS = 0x00U;                                      
+  /* ### Init_RTC init code */
+  /* RTCMOD: RTCMOD=0 */
+  RTCMOD = 0x00U;                      /* Set modulo register */
+  /* RTCSC: RTIF=1,RTCLKS=0,RTIE=0,RTCPS=8 */
+  RTCSC = 0x88U;                       /* Configure RTC */
   /* ### */
   /*lint -save  -e950 Disable MISRA rule (1.1) checking. */
   asm CLI;                             /* Enable interrupts */
@@ -110,6 +117,26 @@ void MCU_init(void)
 
 
 /*lint -save  -e765 Disable MISRA rule (8.10) checking. */
+/*
+** ===================================================================
+**     Interrupt handler : isrVrtc
+**
+**     Description :
+**         User interrupt service routine. 
+**     Parameters  : None
+**     Returns     : Nothing
+** ===================================================================
+*/
+__interrupt void isrVrtc(void)
+{
+  keyboard_check_key();
+  //ledcontroller_interrupt_handler();
+  RTCSC_RTIF=1;
+
+}
+/* end of isrVrtc */
+
+
 /*lint -restore Enable MISRA rule (8.10) checking. */
 
 /*lint -save  -e950 Disable MISRA rule (1.1) checking. */
@@ -139,7 +166,7 @@ static void (* near const _vect[])(void) @0xFFC0 = { /* Interrupt vector table *
          UNASSIGNED_ISR,               /* Int.no. 28 VReserved28 (at FFC6)           Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 27 VReserved27 (at FFC8)           Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 26 Vmtim (at FFCA)                 Unassigned */
-         UNASSIGNED_ISR,               /* Int.no. 25 Vrtc (at FFCC)                  Unassigned */
+         isrVrtc,                      /* Int.no. 25 Vrtc (at FFCC)                  Used */
          UNASSIGNED_ISR,               /* Int.no. 24 Viic (at FFCE)                  Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 23 Vadc (at FFD0)                  Unassigned */
          UNASSIGNED_ISR,               /* Int.no. 22 VReserved22 (at FFD2)           Unassigned */
