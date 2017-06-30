@@ -1,8 +1,9 @@
 #include <mc9s08sh8.h>
 #include "ledcontroller.h"
 #include "keyevent.h"
+
 char led_intensity;//entre 0 y 10
-#define INTENSITY_RANGE 10
+
 char system_state;
 #define SYSTEM_ON 1
 #define SYSTEM_OFF 0
@@ -278,7 +279,7 @@ void fWHITE(void){
 }
 
 void ledcontroller_pwm_handler_red(void){
-    char cycle_intensity=(red.duty_cycle*led_intensity)/INTENSITY_RANGE;
+    char cycle_intensity=(red.duty_cycle*led_intensity)/INTENSITY_SCALE;
     if(red.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-cycle_intensity))
         RED_PORT=LED_OFF;
     else 
@@ -287,7 +288,7 @@ void ledcontroller_pwm_handler_red(void){
     if(red.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) red.cycle_iteration=0;          
 }
 void ledcontroller_pwm_handler_green(void){
-    char cycle_intensity=(green.duty_cycle*led_intensity)/INTENSITY_RANGE;
+    char cycle_intensity=(green.duty_cycle*led_intensity)/INTENSITY_SCALE;
     if(green.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-cycle_intensity))
         GREEN_PORT=LED_OFF;
     else 
@@ -296,7 +297,7 @@ void ledcontroller_pwm_handler_green(void){
     if(green.cycle_iteration==PWM_PERIOD/INTERRUPT_PERIOD) green.cycle_iteration=0;          
 }
 void ledcontroller_pwm_handler_blue(void){
-    char cycle_intensity=(blue.duty_cycle*led_intensity)/INTENSITY_RANGE;
+    char cycle_intensity=(blue.duty_cycle*led_intensity)/INTENSITY_SCALE;
     if(blue.cycle_iteration<(PWM_PERIOD/INTERRUPT_PERIOD-cycle_intensity))
         BLUE_PORT=LED_OFF;
     else 

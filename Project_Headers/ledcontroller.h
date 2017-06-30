@@ -6,4 +6,6 @@ void ledcontroller_run(void);
 void ledcontroller_interrupt_handler(void);
 void ledcontroller_set_intensity(char);
 
+#define INTENSITY_SCALE 10
+
 #endif
