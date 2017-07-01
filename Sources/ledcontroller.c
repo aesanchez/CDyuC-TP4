@@ -74,13 +74,13 @@ void ledcontroller_run(){
             case '0': set_white();      break;
             case:'1':
             case:'2':
-            case:'3': led_toggle_state(rgb[(key-'0') mod 3]); break;
+            case:'3': led_toggle_state((key-'0') mod 3); break;
             case:'4':
             case:'5':
-            case:'6': led_intensity_up(rgb[(key-'0') mod 3]); break;
+            case:'6': led_intensity_up((key-'0') mod 3); break;
             case:'7':
             case:'8':
-            case:'9': led_intensity_down(rgb[(key-'0') mod 3]);break;
+            case:'9': led_intensity_down((key-'0') mod 3);break;
             default: /*error*/ break;
         }
     }
