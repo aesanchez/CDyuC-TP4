@@ -14,6 +14,8 @@ void main(void) {
 	RTCSC=0x88;//RTC cada 1 ms con las interrupciones apagadas
 	keyboard_init();
 	ledcontroller_init();
+	RTCS_RTIE=1;//arrancar la cuestion cuando este todo preparado
+	//TODO RTC_start()???
 	for (;;) {
 		ledcontroller_run();
 	}
