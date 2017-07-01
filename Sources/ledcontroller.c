@@ -38,6 +38,7 @@ int blink_period = 700;
 unsigned int blink_counter;
 char unsigned blink_state;//1->ON
 unsigned char sweep_counter;
+char sweep_next_color;
 
 /*
 KEY MAP
@@ -58,9 +59,7 @@ KEY MAP
 void ledcontroller_run(){
     if(keyevent_is_empty())return;
     key=keyevent_pop();
-    //llamada a maquina de estados???
     if(current_state==OFF){
-        //solo le interesa la tecla para prender el led
         if(key!='*') return; //ignorar todo menos ON
         state_on();
     }else{
@@ -74,13 +73,13 @@ void ledcontroller_run(){
             case '0': set_white();      break;
             case:'1':
             case:'2':
-            case:'3': led_toggle_state((key-'0') mod 3); break;
+            case:'3': led_toggle_state((key-'0') % 3); break;
             case:'4':
             case:'5':
-            case:'6': led_intensity_up((key-'0') mod 3); break;
+            case:'6': led_intensity_up((key-'0') % 3); break;
             case:'7':
             case:'8':
-            case:'9': led_intensity_down((key-'0') mod 3);break;
+            case:'9': led_intensity_down((key-'0') % 3);break;
             default: /*error*/ break;
         }
     }
@@ -93,6 +92,7 @@ void state_on(void){
 void state_off(void){
     current_state=OFF;
     //apagar forzadamente los leds por si estaban a la mitad de un pwm o algo
+    //no los desactivamos cosa de que cuando se vuelve a prender se mantiene le estado que estaba antes
     led_off(RED);
     led_off(BLUE);
     led_off(GREEN);
@@ -225,70 +225,52 @@ void ledcontroller_blink_handler(void){
         if(rgb[BLUE].previous_state)led_desactivate(BLUE);
     } 
 }
-void fBLINK_TOGGLE(void){
+void blink_toggle(void){
     if(current_state!=BLINKING){
         current_state=BLINKING;
+        //init blink
         blink_counter=0;
         blink_state=1;
+        
     }else{
         current_state=NORMAL;
     }
 }
-void fVEL_DOWN(void){
+void blink_vel_down(void){
     if(blink_period==BLINK_MAX)return;
     blink_period+=BLINK_STEP;
 }
-void fVEL_UP(void){
+void blink_vel_up(void){
     if(blink_period==BLINK_MIN)return;
     blink_period-=BLINK_STEP;
 }
 
-
-//TODO REFACTOREAR
-//se podria tener un arreglo de colores bien piola
-char sweep_next_state;
-void fSWEEP_TOGGLE(void){
-    blink_on=0; 
-    if (sweep_on) sweep_on=0;
-    else{
-        sweep_on=1;
+void sweep_toggle(void){
+    if(current_state!=SWEEPING){
+        current_state=SWEEPING;
+        //init sweep
         sweep_counter=0;
-        sweep_next_state='R';
-        //TODO
-    } 
+        sweep_next_color=RED;
+        rgb[RED].previous_state=rgb[RED].state;
+        rgb[GREEN].previous_state=rgb[GREEN].state;
+        rgb[BLUE].previous_state=rgb[BLUE].state;        
+    }else{
+        current_state=NORMAL;
+    }
 }
 
 void ledcontroller_sweep_handler(void){
     if(sweep_counter++<(SWEEP_PERIOD/INTERRUPT_PERIOD))return;
-    switch (sweep_next_state){
-        case 'R':
-        red.state=1;
-        green.state=0;
-        blue.state=0;
-        RED_ENABLE=LED_ENABLE;
-        GREEN_ENABLE=LED_DISABLE;
-        BLUE_ENABLE=LED_DISABLE;
-        sweep_next_state='G';
-        break;
-        case 'G':
-        red.state=0;
-        green.state=1;
-        blue.state=0;
-        RED_ENABLE=LED_DISABLE;
-        GREEN_ENABLE=LED_ENABLE;
-        BLUE_ENABLE=LED_DISABLE;
-        sweep_next_state='B';
-        break;
-        case 'B':
-        red.state=0;
-        green.state=0;
-        blue.state=1;
-        RED_ENABLE=LED_DISABLE;
-        GREEN_ENABLE=LED_DISABLE;
-        BLUE_ENABLE=LED_ENABLE;
-        sweep_next_state='R';
-        break;
+    sweep_counter=0;
+    char k;
+    for(k=0;k<3;k++){
+        if(k==sweep_next_color){
+            //activar solo los que estaban prendido previamente
+            if(rgb[k].previous_state)led_activate(k);
+        }else{
+            rgb[k].previous_state=rgb[k].state;
+            led_desactivate(k);
+        }
     }
+    sweep_next_color=(sweep_next_color+1) % 3;
 }
-
-
