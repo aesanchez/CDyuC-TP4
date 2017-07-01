@@ -144,16 +144,18 @@ void MCU_init(void)
 __interrupt void isrVrtc(void)
 {
   keyboard_iterations++;
-  potentiometer_iterations++;
   if(keyboard_iterations==KEYBOARD_CHECK_PERIOD){
-    keyboard_check_key();
-    keyboard_iterations=0;
-  } 
-  if(potentiometer_iterations==POTENTIOMETER_PERIOD){
-    potentiometer_interrupt_handler();
-    potentiometer_iterations=0;
+      keyboard_check_key();
+      keyboard_iterations=0;
   }
-  ledcontroller_interrupt_handler();//se llama cada 1 ms
+  if(ledcontroller_is_on()){
+      potentiometer_iterations++;
+      if(potentiometer_iterations==POTENTIOMETER_PERIOD){
+          potentiometer_interrupt_handler();
+          potentiometer_iterations=0;
+      }
+      ledcontroller_interrupt_handler();//se llama cada 1 ms
+  }
   RTCSC_RTIF=1;
 
 }

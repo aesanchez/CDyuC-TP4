@@ -183,7 +183,6 @@ void led_intensity_down(char led_index){
 }
 
 void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
-    if(current_state==OFF) return;
     if(rgb[RED].state)ledcontroller_pwm_handler(RED);
     if(rgb[GREEN].state)ledcontroller_pwm_handler(GREEN);
     if(rgb[BLUE].state)ledcontroller_pwm_handler(BLUE);
@@ -273,4 +272,8 @@ void ledcontroller_sweep_handler(void){
         }
     }
     sweep_next_color=(sweep_next_color+1) % 3;
+}
+
+char ledcontroller_is_on(void){
+    return current_state!=OFF;
 }
