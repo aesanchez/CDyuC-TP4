@@ -53,7 +53,8 @@ typedef unsigned long int uint32_t;
 #include "ledcontroller.h"
 #include "keyboard.h"
 #include "potentiometer.h"
-char iteracion_teclado=0;
+char keyboard_iterations=0;
+char potentiometer_iterations=0;
 /*   Code, declarations and definitions here will be preserved during code generation */
 /* End of user declarations and definitions */
 
@@ -142,13 +143,17 @@ void MCU_init(void)
 */
 __interrupt void isrVrtc(void)
 {
-  iteracion_teclado++;
-  if(iteracion_teclado==25){
+  keyboard_iterations++;
+  potentiometer_iterations++;
+  if(keyboard_iterations==KEYBOARD_CHECK_PERIOD){
     keyboard_check_key();
+    keyboard_iterations=0;
+  } 
+  if(potentiometer_iterations==POTENTIOMETER_PERIOD){
     potentiometer_interrupt_handler();
-    iteracion_teclado=0;
-  }  
-  ledcontroller_interrupt_handler();
+    potentiometer_iterations=0;
+  }
+  ledcontroller_interrupt_handler();//se llama cada 1 ms
   RTCSC_RTIF=1;
 
 }

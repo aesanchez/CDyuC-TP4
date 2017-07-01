@@ -1,6 +1,6 @@
 #include "keyevent.h"
 //single key buffer
-static char key=NULL_CASE;
+static char key;
 char empty = 1;//empty=1 --> TRUE
 
 void keyevent_push(char c) {
