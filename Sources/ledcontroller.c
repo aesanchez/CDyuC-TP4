@@ -279,30 +279,12 @@ void ledcontroller_sweep_handler(void){
     sweep_interrupt_counter=0;
     //no importa si estan prendidos o no-->barrido
     switch(sweep_color_counter/MAX_DUTY_CYCLE){
-        case 0://0-9
-            rgb[RED].duty_cycle--;
-            rgb[GREEN].duty_cycle++;
-            break;
-        case 1://10-19
-            rgb[GREEN].duty_cycle--;
-            rgb[BLUE].duty_cycle++;
-            break;
-        case 2://20-29
-            rgb[BLUE].duty_cycle--;
-            rgb[RED].duty_cycle++;
-            break;
+        case 0  rgb[GREEN].duty_cycle++; break;//0-9
+        case 1  rgb[RED].duty_cycle--;   break;//10-19
+        case 2  rgb[BLUE].duty_cycle++;  break;//20-29
+        case 3  rgb[GREEN].duty_cycle--; break;//30-39
+        case 4  rgb[RED].duty_cycle++;   break;//40-49
+        case 5  rgb[BLUE].duty_cycle--;  break;//50-59
     }
-    /*
-    notar que el switch se puede reemplazar por esto pero no se si ya es muy overkill para entenderlo
-        rgb[sweep_color_counter/MAX_DUTY_CYCLE].duty_cycle--;
-        rgb[((sweep_color_counter/MAX_DUTY_CYCLE)+1)%3].duty_cycle++;
-    */
-    sweep_color_counter=(sweep_color_counter+1) % (MAX_DUTY_CYCLE*3);
+    sweep_color_counter=(sweep_color_counter+1) % (MAX_DUTY_CYCLE*6);
 }
-/* ejemplo asumiendo max_cycle=3
-R   3   |   2   1   0   0   0   0   1   2   3   2   1   0   ...
-G   0   |   1   2   3   2   1   0   0   0   0   1   2   3   ...
-B   0   |   0   0   0   1   2   3   0   0   0   0   0   0   ...
----------------------------------------------------------------
-i  init |   0   1   2   3   4   5   6   7   8   0   1   2   ...
-*/
