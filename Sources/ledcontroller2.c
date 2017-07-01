@@ -2,18 +2,18 @@
 #include "ledcontroller.h"
 #include "keyevent.h"
 
-#define MAX_DUTY_CYCLE 10
-#define MIN_DUTY_CYCLE 0
+//todos los periodos definidos en ms
+#define INTERRUPT_PERIOD 1
 
 #define PWM_PERIOD 10
+#define MAX_DUTY_CYCLE (PWM_PERIOD/INTERRUPT_PERIOD)
+#define MIN_DUTY_CYCLE 0
 
-#define SWEEP_PERIOD 200
+#define SWEEP_PERIOD 200 
 
-#define BLINK_MAX 1000
+#define BLINK_MAX 1000 
 #define BLINK_MIN 100
 #define BLINK_STEP 300
-
-#define INTERRUPT_PERIOD 1
 
 typedef enum{OFF,NORMAL,BLINKING,SWEEPING} state;
 state current_state;
@@ -22,16 +22,35 @@ state current_state;
 static char key;
 char led_intensity;//intensidad total del sistema
 int blink_period = 700;
+unsigned int blink_counter;
+char unsigned blink_state;//1->ON
+char aux;
 
 typedef struct led_type{
     char duty_cycle;
     char cycle_iteration;
     char state;
+    char previous_state;//para el blink
     char mask;//mascara para acceder al valor
 }
 
 led_type red, green, blue;
 
+/*
+KEY MAP
+=======
+   *    --> state_on()
+   #    --> state_off()
+   A    --> blink_vel_up()
+   B    --> blink_vel_down()
+   C    --> blink_toggle()
+   D    --> sweep_toggle()
+   0    --> set_white()
+ R/G/B
+ 1/2/3  --> led_toggle_state(led)
+ 4/5/6  --> led_more_intensity(led)
+ 7/8/9  --> led_less_intensity(led)
+*/
 
 void ledcontroller_run(){
     if(keyevent_is_empty())return;
@@ -40,26 +59,53 @@ void ledcontroller_run(){
     if(current_state==OFF){
         //solo le interesa la tecla para prender el led
         if(key!='*') return; //ignorar todo menos ON
-        fON();
+        state_on();
     }else{
         //leer todo menos la tecla on
         if(key=='*') return; //ignorar los ON
-        //
-        //llamar a lo que corresponda
-        //
+        //a lo tosco seria algo asi
+        switch(key){
+            case '#': state_off();      break;
+            case 'A': blink_vel_up();   break;
+            case 'B': blink_vel_down(); break;
+            case 'C': blink_toggle();   break;
+            case 'D': sweep_toggle();   break;
+            case '0': set_white();      break;
+            default:
+                //entra con las teclas del 1 al 9
+                aux=(key-'0') mod 3; //me devuelve al led que corresponde
+                switch(key){
+                    case:'1':
+                    case:'2':
+                    case:'3':
+                        led_toggle_state(del led que corresponda);
+                }
+
+
+        }
     }
 }
 
-void fON(void){
+void state_on(void){
     current_state=NORMAL;
 }
 
-void fOFF(void){
+void state_off(void){
     current_state=OFF;
     //apagar forzadamente los leds por si estaban a la mitad de un pwm o algo
     led_off(red);
     led_off(blue);
     led_off(green);
+}
+
+void fWHITE(void){
+    current_state=NORMAL;
+    red.duty_cycle=MAX_CYCLE;
+    green.duty_cycle=MAX_CYCLE;
+    blue.duty_cycle=MAX_CYCLE;
+    led_activate(red);
+    led_activate(green);
+    led_activate(blue);
 }
 
 void ledcontroller_init(){
@@ -72,6 +118,11 @@ void ledcontroller_init(){
     red.mask=PTCD_PTCD1_MASK;
     green.mask=PTCD_PTCD2_MASK;
     blue.mask=PTCD_PTCD3_MASK;
+    //que arranquen prendidos todos
+    red.duty_cycle=MAX_DUTY_CYCLE;
+    green.duty_cycle=MAX_DUTY_CYCLE;
+    blue.duty_cycle=MAX_DUTY_CYCLE;
+    //
 
 }
 
@@ -147,4 +198,42 @@ void ledcontroller_pwm_handler(led_type led){
 
 void ledcontroller_set_intensity(char intensity){
     led_intensity=intensity;
+}
+
+void ledcontroller_blink_handler(void){
+    if(blink_counter++<(blink_period/INTERRUPT_PERIOD))return;
+    blink_counter=0;
+    if(blink_state){
+        blink_state=0;
+        red.previous_state=red.state;
+        green.previous_state=green.state;
+        blue.previous_state=blue.state;
+        //desactiva todos, hasta los ya desactivados porque me daba paja poner ifs
+        led_desactivate(red);
+        led_desactivate(green);
+        led_desactivate(blue);
+    }else{
+        blink_state=1;
+        //activar solo los que estaban prendido previamente
+        if(red.previous_state)led_activate(red);
+        if(green.previous_state)led_activate(green);
+        if(blue.previous_state)led_desactivate(blue);
+    } 
+}
+void fBLINK_TOGGLE(void){
+    if(current_state!=BLINKING){
+        current_state=BLINKING;
+        blink_counter=0;
+        blink_state=1;
+    }else{
+        current_state=NORMAL;
+    }
+}
+void fVEL_DOWN(void){
+    if(blink_period==BLINK_MAX)return;
+    blink_period+=BLINK_STEP;
+}
+void fVEL_UP(void){
+    if(blink_period==BLINK_MIN)return;
+    blink_period-=BLINK_STEP;
 }
