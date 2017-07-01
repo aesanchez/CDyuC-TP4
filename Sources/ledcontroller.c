@@ -3,13 +3,14 @@
 #include "keyevent.h"
 
 //todos los periodos definidos en ms
+//todos los periodos deberian ser multiples de INTERRUPT_PERIOD
 #define INTERRUPT_PERIOD 1
 
 #define PWM_PERIOD 10
 #define MAX_DUTY_CYCLE (PWM_PERIOD/INTERRUPT_PERIOD)
 #define MIN_DUTY_CYCLE 0
 
-#define SWEEP_PERIOD 200 
+#define SWEEP_COLOR_PERIOD 50 //tiempo de cada color en el barrido
 
 #define BLINK_MAX 1000 
 #define BLINK_MIN 100
@@ -35,10 +36,10 @@ led_type rgb[3];
 static char key;
 char led_intensity;//intensidad total del sistema
 int blink_period = 700;
-unsigned int blink_counter;
+unsigned int blink_interrupt_counter;
 char unsigned blink_state;//1->ON
-unsigned char sweep_counter;
-char sweep_next_color;
+unsigned int sweep_interrupt_counter;
+char sweep_color_counter;
 
 /*
 KEY MAP
@@ -171,13 +172,19 @@ void led_off(char led_index){
 }
 
 void led_intensity_up(char led_index){
-    if(!rgb[led_index].state) return; //do nothing
+    //TODO: creo que esto ya no jode
+    //sin esto --> te deja cambiar estando apagado(queremos eso?)
+    //if(!rgb[led_index].state) return;
+    if(current_state==SWEEPING) return; //no te deja cambiar la intensidad cuando estamos barriendo. generaria overflow
     if(rgb[led_index].duty_cycle==MAX_DUTY_CYCLE) return;
     rgb[led_index].duty_cycle++;
 }
 
 void led_intensity_down(char led_index){
-    if(!rgb[led_index].state) return; //do nothing
+    //TODO: creo que esto ya no jode
+    //sin esto --> te deja cambiar estando apagado(queremos eso?)
+    //if(!rgb[led_index].state) return;
+    if(current_state==SWEEPING) return; //no te deja cambiar la intensidad cuando estamos barriendo. generaria overflow
     if(rgb[led_index].duty_cycle==MIN_DUTY_CYCLE) return;
     rgb[led_index].duty_cycle--;
 }
@@ -205,8 +212,8 @@ void ledcontroller_set_intensity(char intensity){
 }
 
 void ledcontroller_blink_handler(void){
-    if(blink_counter++<(blink_period/INTERRUPT_PERIOD))return;
-    blink_counter=0;
+    if(blink_interrupt_counter++<(blink_period/INTERRUPT_PERIOD))return;
+    blink_interrupt_counter=0;
     if(blink_state){
         blink_state=0;
         rgb[RED].previous_state=rgb[RED].state;
@@ -228,7 +235,7 @@ void blink_toggle(void){
     if(current_state!=BLINKING){
         current_state=BLINKING;
         //init blink
-        blink_counter=0;
+        blink_interrupt_counter=0;
         blink_state=1;
         
     }else{
@@ -236,44 +243,66 @@ void blink_toggle(void){
     }
 }
 void blink_vel_down(void){
+    //TODO deberia permitirlo cuando no se esta blinkeando?
+    //si decimos que no, como que cada vez es mas importante una maquina de estados jaja
     if(blink_period==BLINK_MAX)return;
     blink_period+=BLINK_STEP;
 }
 void blink_vel_up(void){
+    //TODO deberia permitirlo cuando no se esta blinkeando?
+    //si decimos que no, como que cada vez es mas importante una maquina de estados jaja
     if(blink_period==BLINK_MIN)return;
     blink_period-=BLINK_STEP;
 }
 
+char ledcontroller_is_on(void){
+    return current_state!=OFF;
+}
+
+/*===================VERSION ARCOIRIS===============================*/
 void sweep_toggle(void){
     if(current_state!=SWEEPING){
         current_state=SWEEPING;
         //init sweep
-        sweep_counter=0;
-        sweep_next_color=RED;
-        rgb[RED].previous_state=rgb[RED].state;
-        rgb[GREEN].previous_state=rgb[GREEN].state;
-        rgb[BLUE].previous_state=rgb[BLUE].state;        
+        sweep_interrupt_counter=0;
+        sweep_color_counter=0;
+        rgb[RED].duty_cycle=MAX_DUTY_CYCLE;
+        rgb[GREEN].duty_cycle=MIN_DUTY_CYCLE;
+        rgb[BLUE].duty_cycle=MIN_DUTY_CYCLE;
     }else{
         current_state=NORMAL;
     }
 }
 
 void ledcontroller_sweep_handler(void){
-    if(sweep_counter++<(SWEEP_PERIOD/INTERRUPT_PERIOD))return;
-    sweep_counter=0;
-    char k;
-    for(k=0;k<3;k++){
-        if(k==sweep_next_color){
-            //activar solo los que estaban prendido previamente
-            if(rgb[k].previous_state)led_activate(k);
-        }else{
-            rgb[k].previous_state=rgb[k].state;
-            led_desactivate(k);
-        }
+    if(sweep_interrupt_counter++<(SWEEP_COLOR_PERIOD/INTERRUPT_PERIOD))return;
+    sweep_interrupt_counter=0;
+    //no importa si estan prendidos o no-->barrido
+    switch(sweep_color_counter%MAX_DUTY_CYCLE){
+        case 0://0-9
+            rgb[RED].duty_cycle--;
+            rgb[GREEN].duty_cycle++;
+            break;
+        case 1://10-19
+            rgb[GREEN].duty_cycle--;
+            rgb[BLUE].duty_cycle++;
+            break;
+        case 2://20-29
+            rgb[BLUE].duty_cycle--;
+            rgb[RED].duty_cycle++;
+            break;
     }
-    sweep_next_color=(sweep_next_color+1) % 3;
+    /*
+    notar que el switch se puede reemplazar por esto pero no se si ya es muy overkill para entenderlo
+        rgb[sweep_color_counter%MAX_DUTY_CYCLE].duty_cycle--;
+        rgb[((sweep_color_counter%MAX_DUTY_CYCLE)+1)%3].duty_cycle++;
+    */
+    sweep_color_counter=(sweep_color_counter+1) % (MAX_DUTY_CYCLE*3);
 }
-
-char ledcontroller_is_on(void){
-    return current_state!=OFF;
-}
+/* ejemplo asumiendo max_cycle=3
+R   3   |   2   1   0   0   0   0   1   2   3   2   1   0   ...
+G   0   |   1   2   3   2   1   0   0   0   0   1   2   3   ...
+B   0   |   0   0   0   1   2   3   0   0   0   0   0   0   ...
+---------------------------------------------------------------
+i  init |   0   1   2   3   4   5   6   7   8   0   1   2   ...
+*/
