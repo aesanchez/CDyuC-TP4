@@ -133,6 +133,8 @@ void ledcontroller_init(void){
     PTCDD_PTCDD1=1;
     PTCDD_PTCDD2=1;
     PTCDD_PTCDD3=1;
+    //high drive
+    PTCDS=0x0F;
     //las mascaras del bit que corresponden en PTC
     rgb[RED].mask=PTCD_PTCD1_MASK;
     rgb[GREEN].mask=PTCD_PTCD2_MASK;
