@@ -93,13 +93,13 @@ void ledcontroller_run(){
             case '0': set_white();      break;
             case '1':
             case '2':
-            case '3': led_toggle_state((key-'0') % 3); break;
+            case '3': led_toggle_state(((key-'0')-1) % 3); break;
             case '4':
             case '5':
-            case '6': led_intensity_up((key-'0') % 3); break;
+            case '6': led_intensity_up(((key-'0')-1) % 3); break;
             case '7':
             case '8':
-            case '9': led_intensity_down((key-'0') % 3);break;
+            case '9': led_intensity_down(((key-'0')-1) % 3);break;
             default: /*error*/ break;
         }
     }
@@ -149,6 +149,9 @@ void ledcontroller_init(void){
     //led_intensity=INTENSITY_SCALE;
     //arranca fully bright? el tema es que de toque
     // se va a llamar a la funcion para actualizar esto y no nos cambia en nada
+    led_off(RED);
+    led_off(GREEN);
+    led_off(BLUE);
 }
 
 void led_desactivate(char led_index){
@@ -275,7 +278,8 @@ void blink_vel_up(void){
 }
 
 char ledcontroller_is_on(void){
-    return current_state!=OFF;
+    if(current_state==OFF) return 0;
+    else return 1;
 }
 
 /*===================VERSION ARCOIRIS===============================*/
@@ -285,9 +289,12 @@ void sweep_toggle(void){
         //init sweep
         sweep_interrupt_counter=0;
         sweep_color_counter=0;
+        led_activate(RED);
+        led_activate(GREEN);
+        led_activate(BLUE);
         rgb[RED].duty_cycle=MAX_DUTY_CYCLE;
         rgb[GREEN].duty_cycle=MIN_DUTY_CYCLE;
-        rgb[BLUE].duty_cycle=MIN_DUTY_CYCLE;
+        rgb[BLUE].duty_cycle=MIN_DUTY_CYCLE;        
     }else{
         current_state=NORMAL;
     }
