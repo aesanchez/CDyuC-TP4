@@ -212,11 +212,13 @@ void led_intensity_down(char led_index){
 }
 
 void ledcontroller_interrupt_handler(void){//llamada cada 1 ms
-    if(rgb[RED].state)ledcontroller_pwm_handler(RED);
-    if(rgb[GREEN].state)ledcontroller_pwm_handler(GREEN);
-    if(rgb[BLUE].state)ledcontroller_pwm_handler(BLUE);
     if(current_state==SWEEPING)ledcontroller_sweep_handler();
     if(current_state==BLINKING)ledcontroller_blink_handler();
+    if(current_state==BLINKING && blink_state==0) return;
+    if(rgb[RED].state)ledcontroller_pwm_handler(RED);
+    if(rgb[GREEN].state)ledcontroller_pwm_handler(GREEN);
+    if(rgb[BLUE].state)ledcontroller_pwm_handler(BLUE);    
+    
 }
 
 void ledcontroller_pwm_handler(char led_index){
@@ -238,19 +240,22 @@ void ledcontroller_blink_handler(void){
     blink_interrupt_counter=0;
     if(blink_state){
         blink_state=0;
-        rgb[RED].previous_state=rgb[RED].state;
+        /*rgb[RED].previous_state=rgb[RED].state;
         rgb[GREEN].previous_state=rgb[GREEN].state;
         rgb[BLUE].previous_state=rgb[BLUE].state;
         //desactiva todos, hasta los ya desactivados porque me daba paja poner ifs
         led_desactivate(RED);
         led_desactivate(GREEN);
-        led_desactivate(BLUE);
+        led_desactivate(BLUE);*/
+        led_off(RED);
+        led_off(GREEN);
+        led_off(BLUE);
     }else{
         blink_state=1;
         //activar solo los que estaban prendido previamente
-        if(rgb[RED].previous_state)led_activate(RED);
+        /*if(rgb[RED].previous_state)led_activate(RED);
         if(rgb[GREEN].previous_state)led_activate(GREEN);
-        if(rgb[BLUE].previous_state)led_desactivate(BLUE);
+        if(rgb[BLUE].previous_state)led_activate(BLUE);*/
     } 
 }
 void blink_toggle(void){
