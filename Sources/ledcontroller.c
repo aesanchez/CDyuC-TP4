@@ -45,7 +45,6 @@ struct led_type{
     char duty_cycle;
     char cycle_iteration;
     char state;
-    char previous_state;//para el blink
     char mask;//mascara para acceder al valor
 };
 
