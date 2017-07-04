@@ -194,18 +194,12 @@ void led_off(char led_index){
 }
 
 void led_intensity_up(char led_index){
-    //TODO: creo que esto ya no jode
-    //sin esto --> te deja cambiar estando apagado(queremos eso?)
-    //if(!rgb[led_index].state) return;
     if(current_state==SWEEPING) return; //no te deja cambiar la intensidad cuando estamos barriendo. generaria overflow
     if(rgb[led_index].duty_cycle==MAX_DUTY_CYCLE) return;
     rgb[led_index].duty_cycle++;
 }
 
 void led_intensity_down(char led_index){
-    //TODO: creo que esto ya no jode
-    //sin esto --> te deja cambiar estando apagado(queremos eso?)
-    //if(!rgb[led_index].state) return;
     if(current_state==SWEEPING) return; //no te deja cambiar la intensidad cuando estamos barriendo. generaria overflow
     if(rgb[led_index].duty_cycle==MIN_DUTY_CYCLE) return;
     rgb[led_index].duty_cycle--;
@@ -240,22 +234,11 @@ void ledcontroller_blink_handler(void){
     blink_interrupt_counter=0;
     if(blink_state){
         blink_state=0;
-        /*rgb[RED].previous_state=rgb[RED].state;
-        rgb[GREEN].previous_state=rgb[GREEN].state;
-        rgb[BLUE].previous_state=rgb[BLUE].state;
-        //desactiva todos, hasta los ya desactivados porque me daba paja poner ifs
-        led_desactivate(RED);
-        led_desactivate(GREEN);
-        led_desactivate(BLUE);*/
         led_off(RED);
         led_off(GREEN);
         led_off(BLUE);
     }else{
         blink_state=1;
-        //activar solo los que estaban prendido previamente
-        /*if(rgb[RED].previous_state)led_activate(RED);
-        if(rgb[GREEN].previous_state)led_activate(GREEN);
-        if(rgb[BLUE].previous_state)led_activate(BLUE);*/
     } 
 }
 void blink_toggle(void){
@@ -270,14 +253,10 @@ void blink_toggle(void){
     }
 }
 void blink_vel_down(void){
-    //TODO deberia permitirlo cuando no se esta blinkeando?
-    //si decimos que no, como que cada vez es mas importante una maquina de estados jaja
     if(blink_period==BLINK_MAX)return;
     blink_period+=BLINK_STEP;
 }
 void blink_vel_up(void){
-    //TODO deberia permitirlo cuando no se esta blinkeando?
-    //si decimos que no, como que cada vez es mas importante una maquina de estados jaja
     if(blink_period==BLINK_MIN)return;
     blink_period-=BLINK_STEP;
 }
