@@ -16,7 +16,7 @@ void main(void) {
 	keyboard_init();
 	potentiometer_init();
 	ledcontroller_init();
-	RTCS_RTIE=1;//arrancar la cuestion cuando este todo preparado
+	RTCSC_RTIE=1;//arrancar la cuestion cuando este todo preparado
 	//TODO RTC_start()???
 	for (;;) {
 		ledcontroller_run();

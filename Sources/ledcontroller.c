@@ -20,17 +20,36 @@
 #define GREEN 1
 #define BLUE 2
 
+void state_on(void);
+void state_off(void);
+void set_white(void);
+void blink_vel_down(void);
+void blink_vel_up(void);
+void blink_toggle(void);
+void sweep_toggle(void);
+void led_activate(char);
+void led_desactivate(char);
+void led_toggle_state(char);
+void led_on(char);
+void led_off(char);
+void led_intensity_down(char);
+void led_intensity_up(char);
+void ledcontroller_pwm_handler(char);
+void ledcontroller_blink_handler(void);
+void ledcontroller_sweep_handler(void);
+
 typedef enum{OFF,NORMAL,BLINKING,SWEEPING} state;
 state current_state;
 
-typedef struct led_type{
+struct led_type{
     char duty_cycle;
     char cycle_iteration;
     char state;
     char previous_state;//para el blink
     char mask;//mascara para acceder al valor
-}
-led_type rgb[3];
+};
+
+struct led_type rgb[3];
 
 //variables mundanas
 static char key;
@@ -72,15 +91,15 @@ void ledcontroller_run(){
             case 'C': blink_toggle();   break;
             case 'D': sweep_toggle();   break;
             case '0': set_white();      break;
-            case:'1':
-            case:'2':
-            case:'3': led_toggle_state((key-'0') % 3); break;
-            case:'4':
-            case:'5':
-            case:'6': led_intensity_up((key-'0') % 3); break;
-            case:'7':
-            case:'8':
-            case:'9': led_intensity_down((key-'0') % 3);break;
+            case '1':
+            case '2':
+            case '3': led_toggle_state((key-'0') % 3); break;
+            case '4':
+            case '5':
+            case '6': led_intensity_up((key-'0') % 3); break;
+            case '7':
+            case '8':
+            case '9': led_intensity_down((key-'0') % 3);break;
             default: /*error*/ break;
         }
     }
@@ -101,9 +120,9 @@ void state_off(void){
 
 void set_white(void){
     current_state=NORMAL;
-    rgb[RED].duty_cycle=MAX_CYCLE;
-    rgb[GREEN].duty_cycle=MAX_CYCLE;
-    rgb[BLUE].duty_cycle=MAX_CYCLE;
+    rgb[RED].duty_cycle=MAX_DUTY_CYCLE;
+    rgb[GREEN].duty_cycle=MAX_DUTY_CYCLE;
+    rgb[BLUE].duty_cycle=MAX_DUTY_CYCLE;
     led_activate(RED);
     led_activate(GREEN);
     led_activate(BLUE);
@@ -149,7 +168,7 @@ void led_toggle_state(char led_index){
 
 void led_on(char led_index){
     //led on=0
-    PTCD= PTCD & (~rgb[led_index].mask)
+    PTCD= PTCD & (~rgb[led_index].mask);
     /*
     PTCD  xxxxxxxx
     and
@@ -279,12 +298,12 @@ void ledcontroller_sweep_handler(void){
     sweep_interrupt_counter=0;
     //no importa si estan prendidos o no-->barrido
     switch(sweep_color_counter/MAX_DUTY_CYCLE){
-        case 0  rgb[GREEN].duty_cycle++; break;//0-9
-        case 1  rgb[RED].duty_cycle--;   break;//10-19
-        case 2  rgb[BLUE].duty_cycle++;  break;//20-29
-        case 3  rgb[GREEN].duty_cycle--; break;//30-39
-        case 4  rgb[RED].duty_cycle++;   break;//40-49
-        case 5  rgb[BLUE].duty_cycle--;  break;//50-59
+        case 0:  rgb[GREEN].duty_cycle++; break;//0-9
+        case 1:  rgb[RED].duty_cycle--;   break;//10-19
+        case 2:  rgb[BLUE].duty_cycle++;  break;//20-29
+        case 3:  rgb[GREEN].duty_cycle--; break;//30-39
+        case 4:  rgb[RED].duty_cycle++;   break;//40-49
+        case 5:  rgb[BLUE].duty_cycle--;  break;//50-59
     }
     sweep_color_counter=(sweep_color_counter+1) % (MAX_DUTY_CYCLE*6);
 }
