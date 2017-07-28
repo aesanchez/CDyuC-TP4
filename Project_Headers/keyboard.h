@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_H_
 #define KEYBOARD_H_
 
-// KEYBOARD_CHECK_PERIOD indica el periodo con la que se va a llamar
+// KEYBOARD_CHECK_PERIOD indica el periodo en milisegundos con la que se va a llamar
 // a la rutina keyboard_check_key
 #define KEYBOARD_CHECK_PERIOD 30
 
