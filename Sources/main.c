@@ -11,12 +11,19 @@ void MCU_init(void); /* Device initialization function declaration */
 
 void main(void) {
 	MCU_init();
-	RTCSC=0x88;//RTC cada 1 ms con las interrupciones apagadas
+	// Inicializamos el Real Time Counter para que se realiza una interrupcion cada 1 ms
+	// En particular, se inicializa con las interrupciones apagadas.
+	RTCSC=0x88;
+
+	// Inicializamos los modulos del sistema
 	keyboard_init();
 	potentiometer_init();
 	ledcontroller_init();
-	RTCSC_RTIE=1;//arrancar la cuestion cuando este todo preparado
+
+	// Habilitamos la interrupcion del RTC, para dar comienzo al sistema
 	for (;;) {
+		// Iteramos indefinidamente llamando a ledcontroller_run para permitir
+		// el funcionamiento constante del controlador del led. 
 		ledcontroller_run();
 	}
 }
