@@ -53,6 +53,9 @@ typedef unsigned long int uint32_t;
 #include "ledcontroller.h"
 #include "keyboard.h"
 #include "potentiometer.h"
+
+// variables para controlar el llamado a funciones con su periodo correspondiente.
+// Funcionan a manera de contador
 char keyboard_iterations=0;
 char potentiometer_iterations=0;
 /*   Code, declarations and definitions here will be preserved during code generation */
@@ -141,6 +144,16 @@ void MCU_init(void)
 **     Returns     : Nothing
 ** ===================================================================
 */
+
+// isrVrtc es la funcion que sera llamada gracias a la interrupcion de RTC
+// cada 1 ms debido a las configuraciones iniciales. Se comporta de manera de
+// llamar a las funciones que necesitan correr periodicamente y en particular
+// cada una con su periodo.
+// keyboard_check_key: cada KEYBOARD_CHECK_PERIOD ms
+// ledcontroller_interrupt_handler: cada 1 ms
+// potentiometer_interrupt_handler: cada POTENTIOMETER_PERIOD ms
+// En particular, las ultimas dos solo son llamadas si el estado de
+// ledcontroller se encuentra en ON
 __interrupt void isrVrtc(void)
 {
   keyboard_iterations++;
@@ -156,8 +169,9 @@ __interrupt void isrVrtc(void)
       }
       ledcontroller_interrupt_handler();//se llama cada 1 ms
   }
-  RTCSC_RTIF=1;
 
+  // se indica que se atendio la interrupcion
+  RTCSC_RTIF=1;
 }
 /* end of isrVrtc */
 
